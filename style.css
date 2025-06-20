@@ -1,0 +1,25 @@
+body {
+	background-color: rgb(0, 0, 0);
+	width: 342px;
+	margin: 0px auto;
+	font-family: sans-serif;
+}
+
+#pacman {
+	height: 470px;
+	width: 382px;
+	border-radius: 5px;
+	margin: 20px auto;
+}
+
+#shim {
+	font-family:cursive;
+	position: absolute;
+	visibility: hidden;
+}
+
+h1 {
+	font-family: cursive;
+	text-align: center;
+	color: rgb(86, 163, 128);
+}
