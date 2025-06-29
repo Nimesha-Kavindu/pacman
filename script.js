@@ -287,8 +287,7 @@ Pacman.User = function (game, map) {
     score = 5,
     keyMap = {},
     touchStartX = null,
-    touchStartY = null,
-    swipeFeedback = null;
+    touchStartY = null;
 
   keyMap[KEY.ARROW_LEFT] = LEFT;
   keyMap[KEY.ARROW_UP] = UP;
@@ -374,10 +373,8 @@ Pacman.User = function (game, map) {
       if (Math.abs(deltaX) > minSwipeDistance) {
         if (deltaX > 0) {
           due = RIGHT;
-          showSwipeFeedback("→");
         } else {
           due = LEFT;
-          showSwipeFeedback("←");
         }
       }
     } else {
@@ -385,10 +382,8 @@ Pacman.User = function (game, map) {
       if (Math.abs(deltaY) > minSwipeDistance) {
         if (deltaY > 0) {
           due = DOWN;
-          showSwipeFeedback("↓");
         } else {
           due = UP;
-          showSwipeFeedback("↑");
         }
       }
     }
@@ -401,16 +396,6 @@ Pacman.User = function (game, map) {
   function handleTouchMove(e) {
     // Prevent scrolling when swiping on the game
     e.preventDefault();
-  }
-
-  // Show visual feedback for swipe direction
-  function showSwipeFeedback(direction) {
-    swipeFeedback = {
-      text: direction,
-      time: game.getTick(),
-      x: position.x,
-      y: position.y,
-    };
   }
 
   // Add touch event listeners
@@ -602,19 +587,6 @@ Pacman.User = function (game, map) {
     );
 
     ctx.fill();
-
-    // Draw swipe feedback if available
-    if (swipeFeedback && game.getTick() - swipeFeedback.time < 10) {
-      ctx.fillStyle = "#00FF00";
-      ctx.font = "24px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        swipeFeedback.text,
-        (swipeFeedback.x / 10) * s + s / 2,
-        (swipeFeedback.y / 10) * s - 10
-      );
-      ctx.textAlign = "left";
-    }
   }
 
   initUser();
@@ -633,6 +605,9 @@ Pacman.User = function (game, map) {
     reset: reset,
     resetPosition: resetPosition,
     addTouchListeners: addTouchListeners,
+    getTick: function () {
+      return tick;
+    },
   };
 };
 
@@ -864,7 +839,20 @@ Pacman.Audio = function (game) {
       };
       playing.push(name);
       files[name].addEventListener("ended", endEvents[name], true);
-      files[name].play();
+
+      // Handle autoplay restrictions
+      var playPromise = files[name].play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function (error) {
+          // Autoplay was prevented, but that's okay
+          console.log("Audio autoplay prevented:", error.message);
+          // Remove from playing array since it didn't actually start
+          var index = playing.indexOf(name);
+          if (index > -1) {
+            playing.splice(index, 1);
+          }
+        });
+      }
     }
   }
 
@@ -876,7 +864,13 @@ Pacman.Audio = function (game) {
 
   function resume() {
     for (var i = 0; i < playing.length; i++) {
-      files[playing[i]].play();
+      var playPromise = files[playing[i]].play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function (error) {
+          // Autoplay was prevented, but that's okay
+          console.log("Audio resume prevented:", error.message);
+        });
+      }
     }
   }
 
@@ -905,8 +899,7 @@ var PACMAN = (function () {
     ctx = null,
     timer = null,
     map = null,
-    user = null,
-    stored = null;
+    user = null;
 
   function getTick() {
     return tick;
@@ -974,9 +967,8 @@ var PACMAN = (function () {
     } else if (e.keyCode === KEY.P && state === PAUSE) {
       audio.resume();
       map.draw(ctx);
-      setState(stored);
+      setState(WAITING);
     } else if (e.keyCode === KEY.P) {
-      stored = state;
       setState(PAUSE);
       audio.pause();
       map.draw(ctx);
@@ -1184,6 +1176,9 @@ var PACMAN = (function () {
       {
         completedLevel: completedLevel,
         eatenPill: eatenPill,
+        getTick: function () {
+          return tick;
+        },
       },
       map
     );
