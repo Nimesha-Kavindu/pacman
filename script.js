@@ -571,7 +571,7 @@ Pacman.User = function (game, map) {
     var s = map.blockSize,
       angle = calcAngle(direction, position);
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00d4ff";
 
     ctx.beginPath();
 
@@ -641,8 +641,8 @@ Pacman.Map = function (size) {
   function drawWall(ctx) {
     var i, j, p, line;
 
-    ctx.strokeStyle = "#0000FF";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#00d4ff";
+    ctx.lineWidth = 4;
     ctx.lineCap = "round";
 
     for (i = 0; i < Pacman.WALLS.length; i += 1) {
@@ -696,7 +696,7 @@ Pacman.Map = function (size) {
           ctx.fillStyle = "#000";
           ctx.fillRect(j * blockSize, i * blockSize, blockSize, blockSize);
 
-          ctx.fillStyle = "#FFF";
+          ctx.fillStyle = "#00d4ff";
           ctx.arc(
             j * blockSize + blockSize / 2,
             i * blockSize + blockSize / 2,
@@ -747,7 +747,7 @@ Pacman.Map = function (size) {
       ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
 
       if (layout === Pacman.BISCUIT) {
-        ctx.fillStyle = "#FFF";
+        ctx.fillStyle = "#ffffff";
         ctx.fillRect(
           x * blockSize + blockSize / 2.5,
           y * blockSize + blockSize / 2.5,
@@ -906,8 +906,8 @@ var PACMAN = (function () {
   }
 
   function drawScore(text, position) {
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "12px BDCartoonShoutRegular";
+    ctx.fillStyle = "#00d4ff";
+    ctx.font = "bold 14px Arial";
     ctx.fillText(
       text,
       (position["new"]["x"] / 10) * map.blockSize,
@@ -1003,13 +1003,13 @@ var PACMAN = (function () {
     var topLeft = map.height * map.blockSize,
       textBase = topLeft + 17;
 
-    ctx.fillStyle = "#000000";
+    ctx.fillStyle = "#1a1a1a";
     ctx.fillRect(0, topLeft, map.width * map.blockSize, 30);
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00d4ff";
 
     for (var i = 0, len = user.getLives(); i < len; i++) {
-      ctx.fillStyle = "#FFFF00";
+      ctx.fillStyle = "#00d4ff";
       ctx.beginPath();
       ctx.moveTo(
         150 + 25 * i + map.blockSize / 2,
@@ -1027,12 +1027,12 @@ var PACMAN = (function () {
       ctx.fill();
     }
 
-    ctx.fillStyle = !soundDisabled() ? "#00FF00" : "#FF0000";
+    ctx.fillStyle = !soundDisabled() ? "#00d4ff" : "#ff6b35";
     ctx.font = "bold 16px sans-serif";
     //ctx.fillText("♪", 10, textBase);
     ctx.fillText("s", 10, textBase);
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#ffffff";
     ctx.font = "14px Calibri";
     ctx.fillText("Score: " + user.theScore(), 30, textBase);
     ctx.fillText("Level: " + level, 260, textBase);
@@ -1160,11 +1160,22 @@ var PACMAN = (function () {
     var i,
       len,
       ghost,
-      blockSize = wrapper.offsetWidth / 19,
+      blockSize = Math.min(wrapper.offsetWidth / 19, 20), // Ensure minimum block size
       canvas = document.createElement("canvas");
 
-    canvas.setAttribute("width", blockSize * 19 + "px");
-    canvas.setAttribute("height", blockSize * 22 + 30 + "px");
+    // Ensure canvas fits properly on mobile
+    var canvasWidth = blockSize * 19;
+    var canvasHeight = blockSize * 22 + 30;
+
+    // For mobile, ensure we don't exceed container bounds
+    if (wrapper.offsetWidth < canvasWidth) {
+      blockSize = wrapper.offsetWidth / 19;
+      canvasWidth = blockSize * 19;
+      canvasHeight = blockSize * 22 + 30;
+    }
+
+    canvas.setAttribute("width", canvasWidth + "px");
+    canvas.setAttribute("height", canvasHeight + "px");
 
     wrapper.appendChild(canvas);
 
