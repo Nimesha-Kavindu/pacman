@@ -1,25 +1,65 @@
 body {
-	background-color: rgb(0, 0, 0);
-	width: 342px;
-	margin: 0px auto;
-	font-family: sans-serif;
+  background-color: rgb(0, 0, 0);
+  width: 100%;
+  max-width: 342px;
+  margin: 0px auto;
+  font-family: sans-serif;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 #pacman {
-	height: 470px;
-	width: 382px;
-	border-radius: 5px;
-	margin: 20px auto;
+  height: 470px;
+  width: 100%;
+  max-width: 382px;
+  border-radius: 5px;
+  margin: 20px auto;
+  position: relative;
 }
 
 #shim {
-	font-family:cursive;
-	position: absolute;
-	visibility: hidden;
+  font-family: cursive;
+  position: absolute;
+  visibility: hidden;
 }
 
 h1 {
-	font-family: cursive;
-	text-align: center;
-	color: rgb(86, 163, 128);
+  font-family: cursive;
+  text-align: center;
+  color: rgb(86, 163, 128);
+  margin: 10px 0;
+  font-size: 1.5em;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.2em;
+    margin: 5px 0;
+  }
+
+  #pacman {
+    height: auto;
+    margin: 10px auto;
+  }
+}
+
+/* Prevent zoom on double tap for mobile */
+canvas {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
