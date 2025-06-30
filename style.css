@@ -149,7 +149,7 @@ canvas {
 #user-form input::placeholder {
   color: #aaa;
   opacity: 1;
-  font-style: italic;
+  font-style: normal;
 }
 .error-message {
   color: #ff4444;
