@@ -135,7 +135,7 @@ canvas {
   transition: border-color 0.2s;
 }
 #user-form input:focus {
-  border-bottom: 2px solid #4c66af;
+  border-bottom: 2px solid #4c66af !important;
 }
 #user-form input.error {
   border-bottom: 2px solid #ff4444;
@@ -152,7 +152,7 @@ canvas {
   min-height: 1.2em;
 }
 #play-btn {
-  background: #4a6783;
+  background: #4a6783 !important;
   color: #fff;
   border: none;
   padding: 0.7em 2em;
@@ -162,5 +162,5 @@ canvas {
   margin-top: 0.5em;
 }
 #play-btn:active {
-  background: #3d566c;
+  background: #3d566c !important;
 }
