@@ -800,7 +800,7 @@ Pacman.Map = function (size) {
   };
 };
 
-Pacman.Audio = function (game) {
+Pacman.Audio = function () {
   var files = [],
     endEvents = [],
     progressEvents = [],
@@ -811,9 +811,9 @@ Pacman.Audio = function (game) {
     if (audioUnlocked) return;
     audioUnlocked = true;
     for (var name in files) {
-      if (files.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(files, name)) {
         var f = files[name];
-        f.play();
+        f.play().catch(function () {});
         f.pause();
       }
     }
@@ -844,14 +844,6 @@ Pacman.Audio = function (game) {
     }
   }
 
-  function disableSound() {
-    for (var i = 0; i < playing.length; i++) {
-      files[playing[i]].pause();
-      files[playing[i]].currentTime = 0;
-    }
-    playing = [];
-  }
-
   function ended(name) {
     var i,
       tmp = [],
@@ -860,7 +852,7 @@ Pacman.Audio = function (game) {
     files[name].removeEventListener("ended", endEvents[name], true);
 
     for (i = 0; i < playing.length; i++) {
-      if (!found && playing[i]) {
+      if (!found && playing[i] === name) {
         found = true;
       } else {
         tmp.push(playing[i]);
@@ -870,17 +862,15 @@ Pacman.Audio = function (game) {
   }
 
   function play(name) {
-    if (!game.soundDisabled()) {
-      endEvents[name] = function () {
-        ended(name);
-      };
-      playing.push(name);
-      files[name].addEventListener("ended", endEvents[name], true);
-      files[name].currentTime = 0;
-      files[name].play().catch(function (e) {
-        // Suppress NotAllowedError (autoplay policy), do nothing
-      });
-    }
+    endEvents[name] = function () {
+      ended(name);
+    };
+    playing.push(name);
+    files[name].addEventListener("ended", endEvents[name], true);
+    files[name].currentTime = 0;
+    files[name].play().catch(function (e) {
+      // Suppress NotAllowedError (autoplay policy), do nothing
+    });
   }
 
   function pause() {
@@ -896,7 +886,6 @@ Pacman.Audio = function (game) {
   }
 
   return {
-    disableSound: disableSound,
     load: load,
     play: play,
     pause: pause,
@@ -958,10 +947,6 @@ var PACMAN = (function () {
     ctx.fillText(text, x, map.height * 10 + 8);
   }
 
-  function soundDisabled() {
-    return localStorage["soundDisabled"] === "true";
-  }
-
   function startLevel() {
     user.resetPosition();
     for (var i = 0; i < ghosts.length; i += 1) {
@@ -984,9 +969,6 @@ var PACMAN = (function () {
   function keyDown(e) {
     if (e.keyCode === KEY.ENTER) {
       startNewGame();
-    } else if (e.keyCode === KEY.S) {
-      audio.disableSound();
-      localStorage["soundDisabled"] = !soundDisabled();
     } else if (e.keyCode === KEY.P && state === PAUSE) {
       audio.resume();
       map.draw(ctx);
@@ -1053,11 +1035,6 @@ var PACMAN = (function () {
       ctx.fill();
     }
 
-    ctx.fillStyle = !soundDisabled() ? "#00FF00" : "#FF0000";
-    ctx.font = "bold 16px sans-serif";
-    //ctx.fillText("♪", 10, textBase);
-    ctx.fillText("s", 10, textBase);
-
     ctx.fillStyle = "#FFFF00";
     ctx.font = "14px Calibri";
     ctx.fillText("Score: " + user.theScore(), 30, textBase);
@@ -1070,7 +1047,7 @@ var PACMAN = (function () {
   }
 
   function mainDraw() {
-    var diff, u, i, len, nScore;
+    var u, i, len, nScore;
 
     ghostPos = [];
 
@@ -1162,7 +1139,7 @@ var PACMAN = (function () {
     audio.play("eatpill");
     timerStart = tick;
     eatenCount = 0;
-    for (i = 0; i < ghosts.length; i += 1) {
+    for (var i = 0; i < ghosts.length; i += 1) {
       ghosts[i].makeEatable(ctx);
     }
   }
@@ -1196,18 +1173,7 @@ var PACMAN = (function () {
 
     ctx = canvas.getContext("2d");
 
-    audio = new Pacman.Audio({ soundDisabled: soundDisabled });
-
-    function oneTimeAudioUnlock() {
-      audio.unlock();
-      document.body.removeEventListener("click", oneTimeAudioUnlock, true);
-      document.body.removeEventListener("keydown", oneTimeAudioUnlock, true);
-      document.body.removeEventListener("touchstart", oneTimeAudioUnlock, true);
-    }
-    document.body.addEventListener("click", oneTimeAudioUnlock, true);
-    document.body.addEventListener("keydown", oneTimeAudioUnlock, true);
-    document.body.addEventListener("touchstart", oneTimeAudioUnlock, true);
-
+    audio = new Pacman.Audio();
     map = new Pacman.Map(blockSize);
     user = new Pacman.User(
       {
@@ -1258,6 +1224,16 @@ var PACMAN = (function () {
 
   function loaded() {
     dialog("Press Enter to Start");
+
+    function oneTimeAudioUnlock() {
+      audio.unlock();
+      document.body.removeEventListener("click", oneTimeAudioUnlock, true);
+      document.body.removeEventListener("keydown", oneTimeAudioUnlock, true);
+      document.body.removeEventListener("touchstart", oneTimeAudioUnlock, true);
+    }
+    document.body.addEventListener("click", oneTimeAudioUnlock, true);
+    document.body.addEventListener("keydown", oneTimeAudioUnlock, true);
+    document.body.addEventListener("touchstart", oneTimeAudioUnlock, true);
 
     document.addEventListener("keydown", keyDown, true);
     document.addEventListener("keypress", keyPress, true);
