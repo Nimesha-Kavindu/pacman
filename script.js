@@ -1228,17 +1228,26 @@ var PACMAN = (function () {
   }
 
   function loaded() {
-    dialog("Press Enter to Start");
-
-    function oneTimeAudioUnlock() {
-      audio.unlock();
-      document.body.removeEventListener("click", oneTimeAudioUnlock, true);
-      document.body.removeEventListener("keydown", oneTimeAudioUnlock, true);
-      document.body.removeEventListener("touchstart", oneTimeAudioUnlock, true);
+    // Always show the correct start message
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      dialog("Tap to start - Swipe to move");
+    } else {
+      dialog("Press Enter to Start");
     }
-    document.body.addEventListener("click", oneTimeAudioUnlock, true);
-    document.body.addEventListener("keydown", oneTimeAudioUnlock, true);
-    document.body.addEventListener("touchstart", oneTimeAudioUnlock, true);
+
+    function startGameOnce() {
+      audio.unlock();
+      if (allowGameStart) {
+        startNewGame();
+      }
+      document.body.removeEventListener("click", startGameOnce, true);
+      document.body.removeEventListener("keydown", startGameOnce, true);
+      document.body.removeEventListener("touchstart", startGameOnce, true);
+    }
+    document.body.addEventListener("click", startGameOnce, true);
+    document.body.addEventListener("keydown", startGameOnce, true);
+    document.body.addEventListener("touchstart", startGameOnce, true);
 
     document.addEventListener("keydown", keyDown, true);
     document.addEventListener("keypress", keyPress, true);
