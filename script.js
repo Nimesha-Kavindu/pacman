@@ -283,7 +283,7 @@ Pacman.User = function (game, map) {
     direction = null,
     eaten = null,
     due = null,
-    lives = null,
+    lives = 3,
     score = 5,
     keyMap = {},
     touchStartX = null,
@@ -1210,8 +1210,7 @@ var PACMAN = (function () {
         if (state === WAITING) {
           startNewGame();
         }
-      },
-      { once: true }
+      }
     );
 
     timer = window.setInterval(mainLoop, 1000 / Pacman.FPS);
