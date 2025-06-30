@@ -283,12 +283,11 @@ Pacman.User = function (game, map) {
     direction = null,
     eaten = null,
     due = null,
-    lives = null,
+    lives = 3,
     score = 5,
     keyMap = {},
     touchStartX = null,
-    touchStartY = null,
-    swipeFeedback = null;
+    touchStartY = null;
 
   keyMap[KEY.ARROW_LEFT] = LEFT;
   keyMap[KEY.ARROW_UP] = UP;
@@ -374,10 +373,8 @@ Pacman.User = function (game, map) {
       if (Math.abs(deltaX) > minSwipeDistance) {
         if (deltaX > 0) {
           due = RIGHT;
-          showSwipeFeedback("→");
         } else {
           due = LEFT;
-          showSwipeFeedback("←");
         }
       }
     } else {
@@ -385,10 +382,8 @@ Pacman.User = function (game, map) {
       if (Math.abs(deltaY) > minSwipeDistance) {
         if (deltaY > 0) {
           due = DOWN;
-          showSwipeFeedback("↓");
         } else {
           due = UP;
-          showSwipeFeedback("↑");
         }
       }
     }
@@ -401,28 +396,6 @@ Pacman.User = function (game, map) {
   function handleTouchMove(e) {
     // Prevent scrolling when swiping on the game
     e.preventDefault();
-  }
-
-  // Show visual feedback for swipe direction
-  function showSwipeFeedback(direction) {
-    swipeFeedback = {
-      text: direction,
-      time: game.getTick(),
-      x: position.x,
-      y: position.y,
-    };
-  }
-
-  // Add touch event listeners
-  function addTouchListeners() {
-    var canvas = document.querySelector("canvas");
-    if (canvas) {
-      canvas.addEventListener("touchstart", handleTouchStart, {
-        passive: false,
-      });
-      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-    }
   }
 
   function getNewCoord(dir, current) {
@@ -602,19 +575,6 @@ Pacman.User = function (game, map) {
     );
 
     ctx.fill();
-
-    // Draw swipe feedback if available
-    if (swipeFeedback && game.getTick() - swipeFeedback.time < 10) {
-      ctx.fillStyle = "#00FF00";
-      ctx.font = "24px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        swipeFeedback.text,
-        (swipeFeedback.x / 10) * s + s / 2,
-        (swipeFeedback.y / 10) * s - 10
-      );
-      ctx.textAlign = "left";
-    }
   }
 
   initUser();
@@ -632,7 +592,16 @@ Pacman.User = function (game, map) {
     newLevel: newLevel,
     reset: reset,
     resetPosition: resetPosition,
-    addTouchListeners: addTouchListeners,
+    addTouchListeners: function () {
+      var canvas = document.querySelector("canvas");
+      if (canvas) {
+        canvas.addEventListener("touchstart", handleTouchStart, {
+          passive: false,
+        });
+        canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+      }
+    },
   };
 };
 
@@ -864,7 +833,9 @@ Pacman.Audio = function (game) {
       };
       playing.push(name);
       files[name].addEventListener("ended", endEvents[name], true);
-      files[name].play();
+      files[name].play().catch(function(e) {
+        // Suppress NotAllowedError (autoplay policy), do nothing
+      });
     }
   }
 
@@ -1184,6 +1155,7 @@ var PACMAN = (function () {
       {
         completedLevel: completedLevel,
         eatenPill: eatenPill,
+        getTick: getTick,
       },
       map
     );
@@ -1238,8 +1210,7 @@ var PACMAN = (function () {
         if (state === WAITING) {
           startNewGame();
         }
-      },
-      { once: true }
+      }
     );
 
     timer = window.setInterval(mainLoop, 1000 / Pacman.FPS);
@@ -1590,4 +1561,75 @@ $(function () {
       "Sorry, needs a decent browser<br /><small>" +
       "(firefox 3.6+, Chrome 4+, Opera 10+ and Safari 4+)</small>";
   }
+});
+
+// Modal logic for user form
+window.addEventListener('DOMContentLoaded', function () {
+  var modal = document.getElementById('user-modal');
+  var form = document.getElementById('user-form');
+  var nameInput = document.getElementById('user-name');
+  var emailInput = document.getElementById('user-email');
+  var nameError = document.getElementById('name-error');
+  var emailError = document.getElementById('email-error');
+  var playBtn = document.getElementById('play-btn');
+
+  // Helper: email validation
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // Prevent game start until form is filled
+  var allowGameStart = false;
+
+  // Show modal on load
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+
+  // Prevent tap/enter from starting game until form is valid
+  function blockGameStart(e) {
+    if (!allowGameStart) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }
+  document.addEventListener('keydown', blockGameStart, true);
+  document.addEventListener('touchstart', blockGameStart, true);
+
+  // Form validation and submit
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var valid = true;
+    // Name validation
+    if (!nameInput.value.trim()) {
+      nameInput.classList.add('error');
+      nameError.textContent = 'Name is required.';
+      valid = false;
+    } else {
+      nameInput.classList.remove('error');
+      nameError.textContent = '';
+    }
+    // Email validation
+    if (!emailInput.value.trim()) {
+      emailInput.classList.add('error');
+      emailError.textContent = 'Email is required.';
+      valid = false;
+    } else if (!validateEmail(emailInput.value.trim())) {
+      emailInput.classList.add('error');
+      emailError.textContent = 'Enter a valid email.';
+      valid = false;
+    } else {
+      emailInput.classList.remove('error');
+      emailError.textContent = '';
+    }
+    if (valid) {
+      // Hide modal, allow game start
+      modal.style.display = 'none';
+      allowGameStart = true;
+      // Remove block listeners
+      document.removeEventListener('keydown', blockGameStart, true);
+      document.removeEventListener('touchstart', blockGameStart, true);
+    }
+  });
 });
