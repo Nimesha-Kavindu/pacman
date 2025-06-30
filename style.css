@@ -152,7 +152,7 @@ canvas {
   min-height: 1.2em;
 }
 #play-btn {
-  background: #4caf50;
+  background: #4a6783;
   color: #fff;
   border: none;
   padding: 0.7em 2em;
@@ -162,5 +162,5 @@ canvas {
   margin-top: 0.5em;
 }
 #play-btn:active {
-  background: #388e3c;
+  background: #3d566c;
 }
