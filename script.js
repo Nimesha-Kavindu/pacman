@@ -599,7 +599,9 @@ Pacman.User = function (game, map) {
           passive: false,
         });
         canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+        canvas.addEventListener("touchmove", handleTouchMove, {
+          passive: false,
+        });
       }
     },
   };
@@ -833,7 +835,7 @@ Pacman.Audio = function (game) {
       };
       playing.push(name);
       files[name].addEventListener("ended", endEvents[name], true);
-      files[name].play().catch(function(e) {
+      files[name].play().catch(function (e) {
         // Suppress NotAllowedError (autoplay policy), do nothing
       });
     }
@@ -1204,14 +1206,11 @@ var PACMAN = (function () {
     document.addEventListener("keydown", keyDown, true);
     document.addEventListener("keypress", keyPress, true);
 
-    document.addEventListener(
-      "touchstart",
-      function () {
-        if (state === WAITING) {
-          startNewGame();
-        }
+    document.addEventListener("touchstart", function () {
+      if (state === WAITING) {
+        startNewGame();
       }
-    );
+    });
 
     timer = window.setInterval(mainLoop, 1000 / Pacman.FPS);
   }
@@ -1564,14 +1563,14 @@ $(function () {
 });
 
 // Modal logic for user form
-window.addEventListener('DOMContentLoaded', function () {
-  var modal = document.getElementById('user-modal');
-  var form = document.getElementById('user-form');
-  var nameInput = document.getElementById('user-name');
-  var emailInput = document.getElementById('user-email');
-  var nameError = document.getElementById('name-error');
-  var emailError = document.getElementById('email-error');
-  var playBtn = document.getElementById('play-btn');
+window.addEventListener("DOMContentLoaded", function () {
+  var modal = document.getElementById("user-modal");
+  var form = document.getElementById("user-form");
+  var nameInput = document.getElementById("user-name");
+  var emailInput = document.getElementById("user-email");
+  var nameError = document.getElementById("name-error");
+  var emailError = document.getElementById("email-error");
+  var playBtn = document.getElementById("play-btn");
 
   // Helper: email validation
   function validateEmail(email) {
@@ -1583,53 +1582,56 @@ window.addEventListener('DOMContentLoaded', function () {
 
   // Show modal on load
   if (modal) {
-    modal.style.display = 'flex';
+    modal.style.display = "flex";
   }
 
   // Prevent tap/enter from starting game until form is valid
   function blockGameStart(e) {
     if (!allowGameStart) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
+      // Only block events if they are not on form elements
+      if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
     }
   }
-  document.addEventListener('keydown', blockGameStart, true);
-  document.addEventListener('touchstart', blockGameStart, true);
+  document.addEventListener("keydown", blockGameStart, true);
+  document.addEventListener("touchstart", blockGameStart, true);
 
   // Form validation and submit
-  form.addEventListener('submit', function (e) {
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
     var valid = true;
     // Name validation
     if (!nameInput.value.trim()) {
-      nameInput.classList.add('error');
-      nameError.textContent = 'Name is required.';
+      nameInput.classList.add("error");
+      nameError.textContent = "Name is required.";
       valid = false;
     } else {
-      nameInput.classList.remove('error');
-      nameError.textContent = '';
+      nameInput.classList.remove("error");
+      nameError.textContent = "";
     }
     // Email validation
     if (!emailInput.value.trim()) {
-      emailInput.classList.add('error');
-      emailError.textContent = 'Email is required.';
+      emailInput.classList.add("error");
+      emailError.textContent = "Email is required.";
       valid = false;
     } else if (!validateEmail(emailInput.value.trim())) {
-      emailInput.classList.add('error');
-      emailError.textContent = 'Enter a valid email.';
+      emailInput.classList.add("error");
+      emailError.textContent = "Enter a valid email.";
       valid = false;
     } else {
-      emailInput.classList.remove('error');
-      emailError.textContent = '';
+      emailInput.classList.remove("error");
+      emailError.textContent = "";
     }
     if (valid) {
       // Hide modal, allow game start
-      modal.style.display = 'none';
+      modal.style.display = "none";
       allowGameStart = true;
       // Remove block listeners
-      document.removeEventListener('keydown', blockGameStart, true);
-      document.removeEventListener('touchstart', blockGameStart, true);
+      document.removeEventListener("keydown", blockGameStart, true);
+      document.removeEventListener("touchstart", blockGameStart, true);
     }
   });
 });
