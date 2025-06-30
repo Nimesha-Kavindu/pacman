@@ -1,3 +1,28 @@
+// Firebase Imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getFirestore,
+  updateDoc,
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAuu1D2np1MXhW-lDmZUsSlsWXNX8XLmtg",
+  authDomain: "pacman-7fc5d.firebaseapp.com",
+  projectId: "pacman-7fc5d",
+  storageBucket: "pacman-7fc5d.firebasestorage.app",
+  messagingSenderId: "1087960643167",
+  appId: "1:1087960643167:web:55195d5e2a081fbdb44dea",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 var NONE = 4,
   UP = 3,
   LEFT = 2,
@@ -666,7 +691,7 @@ Pacman.Map = function (size) {
   }
 
   function reset() {
-    map = Pacman.MAP.clone();
+    map = JSON.parse(JSON.stringify(Pacman.MAP));
     height = map.length;
     width = map[0].length;
   }
@@ -684,8 +709,8 @@ Pacman.Map = function (size) {
       pillSize = 0;
     }
 
-    for (i = 0; i < height; i += 1) {
-      for (j = 0; j < width; j += 1) {
+    for (let i = 0; i < height; i += 1) {
+      for (let j = 0; j < width; j += 1) {
         if (map[i][j] === Pacman.PILL) {
           ctx.beginPath();
 
@@ -965,6 +990,8 @@ var PACMAN = (function () {
     user.loseLife();
     if (user.getLives() > 0) {
       startLevel();
+    } else {
+      updateHighScore(user.theScore());
     }
   }
 
@@ -1067,7 +1094,7 @@ var PACMAN = (function () {
   }
 
   function mainLoop() {
-    var diff;
+    var diff, i, len;
 
     if (state !== PAUSE) {
       ++tick;
@@ -1091,7 +1118,7 @@ var PACMAN = (function () {
         redrawBlock(userPos);
         for (i = 0, len = ghosts.length; i < len; i += 1) {
           redrawBlock(ghostPos[i].old);
-          ghostPos.push(ghosts[i].draw(ctx));
+          ghosts[i].draw(ctx);
         }
         user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 2));
       }
@@ -1422,7 +1449,9 @@ Pacman.WALLS = [
     { curve: [0.5, 13.5, 0.5, 14] },
     { line: [0.5, 17] },
     { curve: [0.5, 17.5, 1, 17.5] },
-    { line: [1.5, 17.5] },
+    { line: [9, 17.5] },
+    { curve: [9.5, 17.5, 9.5, 17] },
+    { line: [9.5, 14] },
   ],
   [
     { move: [1, 17.5] },
@@ -1524,22 +1553,6 @@ Pacman.WALLS = [
   ],
 ];
 
-Object.prototype.clone = function () {
-  var i,
-    newObj = this instanceof Array ? [] : {};
-  for (i in this) {
-    if (i === "clone") {
-      continue;
-    }
-    if (this[i] && typeof this[i] === "object") {
-      newObj[i] = this[i].clone();
-    } else {
-      newObj[i] = this[i];
-    }
-  }
-  return newObj;
-};
-
 $(function () {
   var el = document.getElementById("pacman");
 
@@ -1563,46 +1576,43 @@ $(function () {
 });
 
 // Modal logic for user form
+let userId;
 window.addEventListener("DOMContentLoaded", function () {
-  var modal = document.getElementById("user-modal");
-  var form = document.getElementById("user-form");
-  var nameInput = document.getElementById("user-name");
-  var emailInput = document.getElementById("user-email");
-  var nameError = document.getElementById("name-error");
-  var emailError = document.getElementById("email-error");
-  var playBtn = document.getElementById("play-btn");
+  const modal = document.getElementById("user-modal");
+  const form = document.getElementById("user-form");
+  const nameInput = document.getElementById("user-name");
+  const emailInput = document.getElementById("user-email");
+  const nameError = document.getElementById("name-error");
+  const emailError = document.getElementById("email-error");
 
-  // Helper: email validation
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
+  let allowGameStart = false;
 
-  // Prevent game start until form is filled
-  var allowGameStart = false;
+  // Check for existing user ID in localStorage
+  userId = localStorage.getItem("pacmanUserId");
 
-  // Show modal on load
-  if (modal) {
+  if (userId) {
+    // User has played before, hide modal and allow game to start
+    modal.style.display = "none";
+    allowGameStart = true;
+  } else {
+    // First-time player, show the modal
     modal.style.display = "flex";
   }
 
-  // Prevent tap/enter from starting game until form is valid
   function blockGameStart(e) {
     if (!allowGameStart) {
-      // Only block events if they are not on form elements
       if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
         e.preventDefault();
         e.stopPropagation();
-        return false;
       }
     }
   }
   document.addEventListener("keydown", blockGameStart, true);
   document.addEventListener("touchstart", blockGameStart, true);
 
-  // Form validation and submit
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
-    var valid = true;
+    let valid = true;
     // Name validation
     if (!nameInput.value.trim()) {
       nameInput.classList.add("error");
@@ -1617,7 +1627,7 @@ window.addEventListener("DOMContentLoaded", function () {
       emailInput.classList.add("error");
       emailError.textContent = "Email is required.";
       valid = false;
-    } else if (!validateEmail(emailInput.value.trim())) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
       emailInput.classList.add("error");
       emailError.textContent = "Enter a valid email.";
       valid = false;
@@ -1625,13 +1635,48 @@ window.addEventListener("DOMContentLoaded", function () {
       emailInput.classList.remove("error");
       emailError.textContent = "";
     }
+
     if (valid) {
-      // Hide modal, allow game start
-      modal.style.display = "none";
-      allowGameStart = true;
-      // Remove block listeners
-      document.removeEventListener("keydown", blockGameStart, true);
-      document.removeEventListener("touchstart", blockGameStart, true);
+      try {
+        // Let Firestore generate a unique ID
+        const docRef = await addDoc(collection(db, "users"), {
+          name: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          highScore: 0,
+        });
+
+        userId = docRef.id;
+        localStorage.setItem("pacmanUserId", userId);
+
+        modal.style.display = "none";
+        allowGameStart = true;
+        document.removeEventListener("keydown", blockGameStart, true);
+        document.removeEventListener("touchstart", blockGameStart, true);
+      } catch (error) {
+        console.error("Error saving data: ", error);
+        // Handle errors here, maybe show a message to the user
+      }
     }
   });
 });
+
+// Helper function to update high score
+async function updateHighScore(score) {
+  if (!userId) return; // No user ID found
+
+  const userRef = doc(db, "users", userId);
+  try {
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      const currentHighScore = userDoc.data().highScore || 0;
+      if (score > currentHighScore) {
+        await updateDoc(userRef, {
+          highScore: score,
+        });
+        console.log("High score updated!");
+      }
+    }
+  } catch (error) {
+    console.error("Error updating high score: ", error);
+  }
+}
