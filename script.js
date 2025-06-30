@@ -287,8 +287,7 @@ Pacman.User = function (game, map) {
     score = 5,
     keyMap = {},
     touchStartX = null,
-    touchStartY = null,
-    swipeFeedback = null;
+    touchStartY = null;
 
   keyMap[KEY.ARROW_LEFT] = LEFT;
   keyMap[KEY.ARROW_UP] = UP;
@@ -374,10 +373,8 @@ Pacman.User = function (game, map) {
       if (Math.abs(deltaX) > minSwipeDistance) {
         if (deltaX > 0) {
           due = RIGHT;
-          showSwipeFeedback("→");
         } else {
           due = LEFT;
-          showSwipeFeedback("←");
         }
       }
     } else {
@@ -385,10 +382,8 @@ Pacman.User = function (game, map) {
       if (Math.abs(deltaY) > minSwipeDistance) {
         if (deltaY > 0) {
           due = DOWN;
-          showSwipeFeedback("↓");
         } else {
           due = UP;
-          showSwipeFeedback("↑");
         }
       }
     }
@@ -401,28 +396,6 @@ Pacman.User = function (game, map) {
   function handleTouchMove(e) {
     // Prevent scrolling when swiping on the game
     e.preventDefault();
-  }
-
-  // Show visual feedback for swipe direction
-  function showSwipeFeedback(direction) {
-    swipeFeedback = {
-      text: direction,
-      time: game.getTick(),
-      x: position.x,
-      y: position.y,
-    };
-  }
-
-  // Add touch event listeners
-  function addTouchListeners() {
-    var canvas = document.querySelector("canvas");
-    if (canvas) {
-      canvas.addEventListener("touchstart", handleTouchStart, {
-        passive: false,
-      });
-      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-    }
   }
 
   function getNewCoord(dir, current) {
@@ -602,19 +575,6 @@ Pacman.User = function (game, map) {
     );
 
     ctx.fill();
-
-    // Draw swipe feedback if available
-    if (swipeFeedback && game.getTick() - swipeFeedback.time < 10) {
-      ctx.fillStyle = "#00FF00";
-      ctx.font = "24px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        swipeFeedback.text,
-        (swipeFeedback.x / 10) * s + s / 2,
-        (swipeFeedback.y / 10) * s - 10
-      );
-      ctx.textAlign = "left";
-    }
   }
 
   initUser();
@@ -632,7 +592,16 @@ Pacman.User = function (game, map) {
     newLevel: newLevel,
     reset: reset,
     resetPosition: resetPosition,
-    addTouchListeners: addTouchListeners,
+    addTouchListeners: function () {
+      var canvas = document.querySelector("canvas");
+      if (canvas) {
+        canvas.addEventListener("touchstart", handleTouchStart, {
+          passive: false,
+        });
+        canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+      }
+    },
   };
 };
 
@@ -864,7 +833,9 @@ Pacman.Audio = function (game) {
       };
       playing.push(name);
       files[name].addEventListener("ended", endEvents[name], true);
-      files[name].play();
+      files[name].play().catch(function(e) {
+        // Suppress NotAllowedError (autoplay policy), do nothing
+      });
     }
   }
 
@@ -1184,6 +1155,7 @@ var PACMAN = (function () {
       {
         completedLevel: completedLevel,
         eatenPill: eatenPill,
+        getTick: getTick,
       },
       map
     );
