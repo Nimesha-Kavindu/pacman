@@ -5,8 +5,11 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
+  query,
   updateDoc,
+  where,
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
@@ -802,6 +805,19 @@ Pacman.Audio = function (game) {
     endEvents = [],
     progressEvents = [],
     playing = [];
+  var audioUnlocked = false;
+
+  function unlock() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    for (var name in files) {
+      if (files.hasOwnProperty(name)) {
+        var f = files[name];
+        f.play();
+        f.pause();
+      }
+    }
+  }
 
   function load(name, path, cb) {
     var f = (files[name] = document.createElement("audio"));
@@ -860,6 +876,7 @@ Pacman.Audio = function (game) {
       };
       playing.push(name);
       files[name].addEventListener("ended", endEvents[name], true);
+      files[name].currentTime = 0;
       files[name].play().catch(function (e) {
         // Suppress NotAllowedError (autoplay policy), do nothing
       });
@@ -884,6 +901,7 @@ Pacman.Audio = function (game) {
     play: play,
     pause: pause,
     resume: resume,
+    unlock: unlock,
   };
 };
 
@@ -1179,6 +1197,17 @@ var PACMAN = (function () {
     ctx = canvas.getContext("2d");
 
     audio = new Pacman.Audio({ soundDisabled: soundDisabled });
+
+    function oneTimeAudioUnlock() {
+      audio.unlock();
+      document.body.removeEventListener("click", oneTimeAudioUnlock, true);
+      document.body.removeEventListener("keydown", oneTimeAudioUnlock, true);
+      document.body.removeEventListener("touchstart", oneTimeAudioUnlock, true);
+    }
+    document.body.addEventListener("click", oneTimeAudioUnlock, true);
+    document.body.addEventListener("keydown", oneTimeAudioUnlock, true);
+    document.body.addEventListener("touchstart", oneTimeAudioUnlock, true);
+
     map = new Pacman.Map(blockSize);
     user = new Pacman.User(
       {
@@ -1638,14 +1667,28 @@ window.addEventListener("DOMContentLoaded", function () {
 
     if (valid) {
       try {
-        // Let Firestore generate a unique ID
-        const docRef = await addDoc(collection(db, "users"), {
-          name: nameInput.value.trim(),
-          email: emailInput.value.trim(),
-          highScore: 0,
-        });
+        const userEmail = emailInput.value.trim();
+        const userName = nameInput.value.trim();
 
-        userId = docRef.id;
+        // Check if user with this email already exists
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", userEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          // User exists, get the first document's ID
+          const existingUserDoc = querySnapshot.docs[0];
+          userId = existingUserDoc.id;
+        } else {
+          // New user, create a new document
+          const docRef = await addDoc(collection(db, "users"), {
+            name: userName,
+            email: userEmail,
+            highScore: 0,
+          });
+          userId = docRef.id;
+        }
+
         localStorage.setItem("pacmanUserId", userId);
 
         modal.style.display = "none";
