@@ -86,10 +86,11 @@ canvas {
   user-select: none;
 }
 
-body.modal-blur {
+/* Remove blur effect from body and modal */
+/* body.modal-blur {
   filter: blur(6px);
   transition: filter 0.3s;
-}
+} */
 
 .modal {
   display: flex;
@@ -99,7 +100,7 @@ body.modal-blur {
   background: rgba(0,0,0,0.7);
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(4px);
+  /* backdrop-filter: blur(4px); */
 }
 .modal-content {
   background: #222;

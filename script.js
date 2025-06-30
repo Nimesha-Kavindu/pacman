@@ -1584,7 +1584,6 @@ window.addEventListener('DOMContentLoaded', function () {
   // Show modal on load
   if (modal) {
     modal.style.display = 'flex';
-    document.body.classList.add('modal-blur');
   }
 
   // Prevent tap/enter from starting game until form is valid
@@ -1628,7 +1627,6 @@ window.addEventListener('DOMContentLoaded', function () {
       // Hide modal, allow game start
       modal.style.display = 'none';
       allowGameStart = true;
-      document.body.classList.remove('modal-blur');
       // Remove block listeners
       document.removeEventListener('keydown', blockGameStart, true);
       document.removeEventListener('touchstart', blockGameStart, true);
