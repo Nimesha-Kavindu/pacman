@@ -85,3 +85,58 @@ canvas {
   -ms-user-select: none;
   user-select: none;
 }
+
+/* Modal styles */
+.modal {
+  display: flex;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #222;
+  color: #fff;
+  padding: 2em 1.5em;
+  border-radius: 10px;
+  min-width: 280px;
+  box-shadow: 0 2px 16px #0008;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+#user-form label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1em;
+}
+#user-form input {
+  padding: 0.5em;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+#user-form input.error {
+  border-color: #ff4444;
+  background: #fff0f0;
+}
+.error-message {
+  color: #ff4444;
+  font-size: 0.9em;
+  min-height: 1.2em;
+}
+#play-btn {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 0.7em 2em;
+  border-radius: 5px;
+  font-size: 1.1em;
+  cursor: pointer;
+  margin-top: 0.5em;
+}
+#play-btn:active {
+  background: #388e3c;
+}
