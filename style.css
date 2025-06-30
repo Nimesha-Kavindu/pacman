@@ -86,7 +86,11 @@ canvas {
   user-select: none;
 }
 
-/* Modal styles */
+body.modal-blur {
+  filter: blur(6px);
+  transition: filter 0.3s;
+}
+
 .modal {
   display: flex;
   position: fixed;
@@ -95,6 +99,7 @@ canvas {
   background: rgba(0,0,0,0.7);
   justify-content: center;
   align-items: center;
+  backdrop-filter: blur(4px);
 }
 .modal-content {
   background: #222;
@@ -111,16 +116,39 @@ canvas {
   display: flex;
   flex-direction: column;
   margin-bottom: 1em;
+  position: relative;
+}
+#user-form .input-icon {
+  position: absolute;
+  left: 0.5em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2em;
+  color: #888;
+  pointer-events: none;
 }
 #user-form input {
-  padding: 0.5em;
-  border: 2px solid #ccc;
-  border-radius: 5px;
+  padding: 0.5em 0.5em 0.5em 2.2em;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
   font-size: 1em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#user-form input:focus {
+  border-bottom: 2px solid #4caf50;
 }
 #user-form input.error {
-  border-color: #ff4444;
-  background: #fff0f0;
+  border-bottom: 2px solid #ff4444;
+  background: transparent;
+}
+#user-form input::placeholder {
+  color: #aaa;
+  opacity: 1;
+  font-style: italic;
 }
 .error-message {
   color: #ff4444;
