@@ -121,6 +121,7 @@ canvas {
   font-size: 1.2em;
   color: #888;
   pointer-events: none;
+  padding-bottom: 18px;
 }
 #user-form input {
   padding: 0.5em 0.5em 0.5em 2.2em;
