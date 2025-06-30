@@ -1,3 +1,34 @@
+// Firebase Imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  updateDoc,
+  where,
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAuu1D2np1MXhW-lDmZUsSlsWXNX8XLmtg",
+  authDomain: "pacman-7fc5d.firebaseapp.com",
+  projectId: "pacman-7fc5d",
+  storageBucket: "pacman-7fc5d.firebasestorage.app",
+  messagingSenderId: "1087960643167",
+  appId: "1:1087960643167:web:55195d5e2a081fbdb44dea",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let allowGameStart = false;
+let userId;
+
 var NONE = 4,
   UP = 3,
   LEFT = 2,
@@ -599,7 +630,9 @@ Pacman.User = function (game, map) {
           passive: false,
         });
         canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+        canvas.addEventListener("touchmove", handleTouchMove, {
+          passive: false,
+        });
       }
     },
   };
@@ -664,7 +697,7 @@ Pacman.Map = function (size) {
   }
 
   function reset() {
-    map = Pacman.MAP.clone();
+    map = JSON.parse(JSON.stringify(Pacman.MAP));
     height = map.length;
     width = map[0].length;
   }
@@ -682,8 +715,8 @@ Pacman.Map = function (size) {
       pillSize = 0;
     }
 
-    for (i = 0; i < height; i += 1) {
-      for (j = 0; j < width; j += 1) {
+    for (let i = 0; i < height; i += 1) {
+      for (let j = 0; j < width; j += 1) {
         if (map[i][j] === Pacman.PILL) {
           ctx.beginPath();
 
@@ -770,11 +803,24 @@ Pacman.Map = function (size) {
   };
 };
 
-Pacman.Audio = function (game) {
+Pacman.Audio = function () {
   var files = [],
     endEvents = [],
     progressEvents = [],
     playing = [];
+  var audioUnlocked = false;
+
+  function unlock() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    for (var name in files) {
+      if (Object.prototype.hasOwnProperty.call(files, name)) {
+        var f = files[name];
+        f.play().catch(function () {});
+        f.pause();
+      }
+    }
+  }
 
   function load(name, path, cb) {
     var f = (files[name] = document.createElement("audio"));
@@ -801,14 +847,6 @@ Pacman.Audio = function (game) {
     }
   }
 
-  function disableSound() {
-    for (var i = 0; i < playing.length; i++) {
-      files[playing[i]].pause();
-      files[playing[i]].currentTime = 0;
-    }
-    playing = [];
-  }
-
   function ended(name) {
     var i,
       tmp = [],
@@ -817,7 +855,7 @@ Pacman.Audio = function (game) {
     files[name].removeEventListener("ended", endEvents[name], true);
 
     for (i = 0; i < playing.length; i++) {
-      if (!found && playing[i]) {
+      if (!found && playing[i] === name) {
         found = true;
       } else {
         tmp.push(playing[i]);
@@ -827,16 +865,15 @@ Pacman.Audio = function (game) {
   }
 
   function play(name) {
-    if (!game.soundDisabled()) {
-      endEvents[name] = function () {
-        ended(name);
-      };
-      playing.push(name);
-      files[name].addEventListener("ended", endEvents[name], true);
-      files[name].play().catch(function(e) {
-        // Suppress NotAllowedError (autoplay policy), do nothing
-      });
-    }
+    endEvents[name] = function () {
+      ended(name);
+    };
+    playing.push(name);
+    files[name].addEventListener("ended", endEvents[name], true);
+    files[name].currentTime = 0;
+    files[name].play().catch(function (e) {
+      // Suppress NotAllowedError (autoplay policy), do nothing
+    });
   }
 
   function pause() {
@@ -852,11 +889,11 @@ Pacman.Audio = function (game) {
   }
 
   return {
-    disableSound: disableSound,
     load: load,
     play: play,
     pause: pause,
     resume: resume,
+    unlock: unlock,
   };
 };
 
@@ -913,10 +950,6 @@ var PACMAN = (function () {
     ctx.fillText(text, x, map.height * 10 + 8);
   }
 
-  function soundDisabled() {
-    return localStorage["soundDisabled"] === "true";
-  }
-
   function startLevel() {
     user.resetPosition();
     for (var i = 0; i < ghosts.length; i += 1) {
@@ -938,10 +971,9 @@ var PACMAN = (function () {
 
   function keyDown(e) {
     if (e.keyCode === KEY.ENTER) {
-      startNewGame();
-    } else if (e.keyCode === KEY.S) {
-      audio.disableSound();
-      localStorage["soundDisabled"] = !soundDisabled();
+      if (allowGameStart) {
+        startNewGame();
+      }
     } else if (e.keyCode === KEY.P && state === PAUSE) {
       audio.resume();
       map.draw(ctx);
@@ -963,6 +995,8 @@ var PACMAN = (function () {
     user.loseLife();
     if (user.getLives() > 0) {
       startLevel();
+    } else {
+      updateHighScore(user.theScore());
     }
   }
 
@@ -1006,11 +1040,6 @@ var PACMAN = (function () {
       ctx.fill();
     }
 
-    ctx.fillStyle = !soundDisabled() ? "#00FF00" : "#FF0000";
-    ctx.font = "bold 16px sans-serif";
-    //ctx.fillText("♪", 10, textBase);
-    ctx.fillText("s", 10, textBase);
-
     ctx.fillStyle = "#FFFF00";
     ctx.font = "14px Calibri";
     ctx.fillText("Score: " + user.theScore(), 30, textBase);
@@ -1023,7 +1052,7 @@ var PACMAN = (function () {
   }
 
   function mainDraw() {
-    var diff, u, i, len, nScore;
+    var u, i, len, nScore;
 
     ghostPos = [];
 
@@ -1065,7 +1094,7 @@ var PACMAN = (function () {
   }
 
   function mainLoop() {
-    var diff;
+    var diff, i, len;
 
     if (state !== PAUSE) {
       ++tick;
@@ -1089,7 +1118,7 @@ var PACMAN = (function () {
         redrawBlock(userPos);
         for (i = 0, len = ghosts.length; i < len; i += 1) {
           redrawBlock(ghostPos[i].old);
-          ghostPos.push(ghosts[i].draw(ctx));
+          ghosts[i].draw(ctx);
         }
         user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 2));
       }
@@ -1115,7 +1144,7 @@ var PACMAN = (function () {
     audio.play("eatpill");
     timerStart = tick;
     eatenCount = 0;
-    for (i = 0; i < ghosts.length; i += 1) {
+    for (var i = 0; i < ghosts.length; i += 1) {
       ghosts[i].makeEatable(ctx);
     }
   }
@@ -1149,7 +1178,7 @@ var PACMAN = (function () {
 
     ctx = canvas.getContext("2d");
 
-    audio = new Pacman.Audio({ soundDisabled: soundDisabled });
+    audio = new Pacman.Audio();
     map = new Pacman.Map(blockSize);
     user = new Pacman.User(
       {
@@ -1201,17 +1230,24 @@ var PACMAN = (function () {
   function loaded() {
     dialog("Press Enter to Start");
 
+    function oneTimeAudioUnlock() {
+      audio.unlock();
+      document.body.removeEventListener("click", oneTimeAudioUnlock, true);
+      document.body.removeEventListener("keydown", oneTimeAudioUnlock, true);
+      document.body.removeEventListener("touchstart", oneTimeAudioUnlock, true);
+    }
+    document.body.addEventListener("click", oneTimeAudioUnlock, true);
+    document.body.addEventListener("keydown", oneTimeAudioUnlock, true);
+    document.body.addEventListener("touchstart", oneTimeAudioUnlock, true);
+
     document.addEventListener("keydown", keyDown, true);
     document.addEventListener("keypress", keyPress, true);
 
-    document.addEventListener(
-      "touchstart",
-      function () {
-        if (state === WAITING) {
-          startNewGame();
-        }
+    document.addEventListener("touchstart", function () {
+      if (state === WAITING && allowGameStart) {
+        startNewGame();
       }
-    );
+    });
 
     timer = window.setInterval(mainLoop, 1000 / Pacman.FPS);
   }
@@ -1423,7 +1459,9 @@ Pacman.WALLS = [
     { curve: [0.5, 13.5, 0.5, 14] },
     { line: [0.5, 17] },
     { curve: [0.5, 17.5, 1, 17.5] },
-    { line: [1.5, 17.5] },
+    { line: [9, 17.5] },
+    { curve: [9.5, 17.5, 9.5, 17] },
+    { line: [9.5, 14] },
   ],
   [
     { move: [1, 17.5] },
@@ -1525,22 +1563,6 @@ Pacman.WALLS = [
   ],
 ];
 
-Object.prototype.clone = function () {
-  var i,
-    newObj = this instanceof Array ? [] : {};
-  for (i in this) {
-    if (i === "clone") {
-      continue;
-    }
-    if (this[i] && typeof this[i] === "object") {
-      newObj[i] = this[i].clone();
-    } else {
-      newObj[i] = this[i];
-    }
-  }
-  return newObj;
-};
-
 $(function () {
   var el = document.getElementById("pacman");
 
@@ -1564,72 +1586,105 @@ $(function () {
 });
 
 // Modal logic for user form
-window.addEventListener('DOMContentLoaded', function () {
-  var modal = document.getElementById('user-modal');
-  var form = document.getElementById('user-form');
-  var nameInput = document.getElementById('user-name');
-  var emailInput = document.getElementById('user-email');
-  var nameError = document.getElementById('name-error');
-  var emailError = document.getElementById('email-error');
-  var playBtn = document.getElementById('play-btn');
+window.addEventListener("DOMContentLoaded", function () {
+  const modal = document.getElementById("user-modal");
+  const form = document.getElementById("user-form");
+  const nameInput = document.getElementById("user-name");
+  const emailInput = document.getElementById("user-email");
+  const nameError = document.getElementById("name-error");
+  const emailError = document.getElementById("email-error");
 
-  // Helper: email validation
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // Check for existing user ID in localStorage
+  userId = localStorage.getItem("pacmanUserId");
+
+  if (userId) {
+    // User has played before, hide modal and allow game to start
+    modal.style.display = "none";
+    allowGameStart = true;
+  } else {
+    // First-time player, show the modal
+    modal.style.display = "flex";
   }
 
-  // Prevent game start until form is filled
-  var allowGameStart = false;
-
-  // Show modal on load
-  if (modal) {
-    modal.style.display = 'flex';
-  }
-
-  // Prevent tap/enter from starting game until form is valid
-  function blockGameStart(e) {
-    if (!allowGameStart) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  }
-  document.addEventListener('keydown', blockGameStart, true);
-  document.addEventListener('touchstart', blockGameStart, true);
-
-  // Form validation and submit
-  form.addEventListener('submit', function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
-    var valid = true;
+    let valid = true;
     // Name validation
     if (!nameInput.value.trim()) {
-      nameInput.classList.add('error');
-      nameError.textContent = 'Name is required.';
+      nameInput.classList.add("error");
+      nameError.textContent = "Name is required.";
       valid = false;
     } else {
-      nameInput.classList.remove('error');
-      nameError.textContent = '';
+      nameInput.classList.remove("error");
+      nameError.textContent = "";
     }
     // Email validation
     if (!emailInput.value.trim()) {
-      emailInput.classList.add('error');
-      emailError.textContent = 'Email is required.';
+      emailInput.classList.add("error");
+      emailError.textContent = "Email is required.";
       valid = false;
-    } else if (!validateEmail(emailInput.value.trim())) {
-      emailInput.classList.add('error');
-      emailError.textContent = 'Enter a valid email.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+      emailInput.classList.add("error");
+      emailError.textContent = "Enter a valid email.";
       valid = false;
     } else {
-      emailInput.classList.remove('error');
-      emailError.textContent = '';
+      emailInput.classList.remove("error");
+      emailError.textContent = "";
     }
+
     if (valid) {
-      // Hide modal, allow game start
-      modal.style.display = 'none';
-      allowGameStart = true;
-      // Remove block listeners
-      document.removeEventListener('keydown', blockGameStart, true);
-      document.removeEventListener('touchstart', blockGameStart, true);
+      try {
+        const userEmail = emailInput.value.trim();
+        const userName = nameInput.value.trim();
+
+        // Check if user with this email already exists
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", userEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          // User exists, get the first document's ID
+          const existingUserDoc = querySnapshot.docs[0];
+          userId = existingUserDoc.id;
+        } else {
+          // New user, create a new document
+          const docRef = await addDoc(collection(db, "users"), {
+            name: userName,
+            email: userEmail,
+            highScore: 0,
+          });
+          userId = docRef.id;
+        }
+
+        localStorage.setItem("pacmanUserId", userId);
+
+        modal.style.display = "none";
+        allowGameStart = true;
+      } catch (error) {
+        console.error("Error saving data: ", error);
+        // Handle errors here, maybe show a message to the user
+      }
     }
   });
 });
+
+// Helper function to update high score
+async function updateHighScore(score) {
+  if (!userId) return; // No user ID found
+
+  const userRef = doc(db, "users", userId);
+  try {
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      const currentHighScore = userDoc.data().highScore || 0;
+      if (score > currentHighScore) {
+        await updateDoc(userRef, {
+          highScore: score,
+        });
+        console.log("High score updated!");
+      }
+    }
+  } catch (error) {
+    console.error("Error updating high score: ", error);
+  }
+}
