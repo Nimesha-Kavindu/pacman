@@ -26,6 +26,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let allowGameStart = false;
+let userId;
+
 var NONE = 4,
   UP = 3,
   LEFT = 2,
@@ -587,7 +590,7 @@ Pacman.User = function (game, map) {
     var s = map.blockSize,
       angle = calcAngle(direction, position);
 
-    ctx.fillStyle = "#00d4ff";
+    ctx.fillStyle = "#FFFF00";
 
     ctx.beginPath();
 
@@ -665,8 +668,8 @@ Pacman.Map = function (size) {
   function drawWall(ctx) {
     var i, j, p, line;
 
-    ctx.strokeStyle = "#00d4ff";
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#0000FF";
+    ctx.lineWidth = 5;
     ctx.lineCap = "round";
 
     for (i = 0; i < Pacman.WALLS.length; i += 1) {
@@ -720,7 +723,7 @@ Pacman.Map = function (size) {
           ctx.fillStyle = "#000";
           ctx.fillRect(j * blockSize, i * blockSize, blockSize, blockSize);
 
-          ctx.fillStyle = "#00d4ff";
+          ctx.fillStyle = "#FFF";
           ctx.arc(
             j * blockSize + blockSize / 2,
             i * blockSize + blockSize / 2,
@@ -771,7 +774,7 @@ Pacman.Map = function (size) {
       ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
 
       if (layout === Pacman.BISCUIT) {
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#FFF";
         ctx.fillRect(
           x * blockSize + blockSize / 2.5,
           y * blockSize + blockSize / 2.5,
@@ -881,13 +884,7 @@ Pacman.Audio = function () {
 
   function resume() {
     for (var i = 0; i < playing.length; i++) {
-      var playPromise = files[playing[i]].play();
-      if (playPromise !== undefined) {
-        playPromise.catch(function (error) {
-          // Autoplay was prevented, but that's okay
-          console.log("Audio resume prevented:", error.message);
-        });
-      }
+      files[playing[i]].play();
     }
   }
 
@@ -916,15 +913,16 @@ var PACMAN = (function () {
     ctx = null,
     timer = null,
     map = null,
-    user = null;
+    user = null,
+    stored = null;
 
   function getTick() {
     return tick;
   }
 
   function drawScore(text, position) {
-    ctx.fillStyle = "#00d4ff";
-    ctx.font = "bold 14px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "12px BDCartoonShoutRegular";
     ctx.fillText(
       text,
       (position["new"]["x"] / 10) * map.blockSize,
@@ -973,12 +971,15 @@ var PACMAN = (function () {
 
   function keyDown(e) {
     if (e.keyCode === KEY.ENTER) {
-      startNewGame();
+      if (allowGameStart) {
+        startNewGame();
+      }
     } else if (e.keyCode === KEY.P && state === PAUSE) {
       audio.resume();
       map.draw(ctx);
-      setState(WAITING);
+      setState(stored);
     } else if (e.keyCode === KEY.P) {
+      stored = state;
       setState(PAUSE);
       audio.pause();
       map.draw(ctx);
@@ -1015,13 +1016,13 @@ var PACMAN = (function () {
     var topLeft = map.height * map.blockSize,
       textBase = topLeft + 17;
 
-    ctx.fillStyle = "#1a1a1a";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, topLeft, map.width * map.blockSize, 30);
 
-    ctx.fillStyle = "#00d4ff";
+    ctx.fillStyle = "#FFFF00";
 
     for (var i = 0, len = user.getLives(); i < len; i++) {
-      ctx.fillStyle = "#00d4ff";
+      ctx.fillStyle = "#FFFF00";
       ctx.beginPath();
       ctx.moveTo(
         150 + 25 * i + map.blockSize / 2,
@@ -1039,7 +1040,7 @@ var PACMAN = (function () {
       ctx.fill();
     }
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#FFFF00";
     ctx.font = "14px Calibri";
     ctx.fillText("Score: " + user.theScore(), 30, textBase);
     ctx.fillText("Level: " + level, 260, textBase);
@@ -1167,22 +1168,11 @@ var PACMAN = (function () {
     var i,
       len,
       ghost,
-      blockSize = Math.min(wrapper.offsetWidth / 19, 20), // Ensure minimum block size
+      blockSize = wrapper.offsetWidth / 19,
       canvas = document.createElement("canvas");
 
-    // Ensure canvas fits properly on mobile
-    var canvasWidth = blockSize * 19;
-    var canvasHeight = blockSize * 22 + 30;
-
-    // For mobile, ensure we don't exceed container bounds
-    if (wrapper.offsetWidth < canvasWidth) {
-      blockSize = wrapper.offsetWidth / 19;
-      canvasWidth = blockSize * 19;
-      canvasHeight = blockSize * 22 + 30;
-    }
-
-    canvas.setAttribute("width", canvasWidth + "px");
-    canvas.setAttribute("height", canvasHeight + "px");
+    canvas.setAttribute("width", blockSize * 19 + "px");
+    canvas.setAttribute("height", blockSize * 22 + 30 + "px");
 
     wrapper.appendChild(canvas);
 
@@ -1254,7 +1244,7 @@ var PACMAN = (function () {
     document.addEventListener("keypress", keyPress, true);
 
     document.addEventListener("touchstart", function () {
-      if (state === WAITING) {
+      if (state === WAITING && allowGameStart) {
         startNewGame();
       }
     });
@@ -1596,7 +1586,6 @@ $(function () {
 });
 
 // Modal logic for user form
-let userId;
 window.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("user-modal");
   const form = document.getElementById("user-form");
@@ -1604,8 +1593,6 @@ window.addEventListener("DOMContentLoaded", function () {
   const emailInput = document.getElementById("user-email");
   const nameError = document.getElementById("name-error");
   const emailError = document.getElementById("email-error");
-
-  let allowGameStart = false;
 
   // Check for existing user ID in localStorage
   userId = localStorage.getItem("pacmanUserId");
@@ -1618,17 +1605,6 @@ window.addEventListener("DOMContentLoaded", function () {
     // First-time player, show the modal
     modal.style.display = "flex";
   }
-
-  function blockGameStart(e) {
-    if (!allowGameStart) {
-      if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-  }
-  document.addEventListener("keydown", blockGameStart, true);
-  document.addEventListener("touchstart", blockGameStart, true);
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -1684,8 +1660,6 @@ window.addEventListener("DOMContentLoaded", function () {
 
         modal.style.display = "none";
         allowGameStart = true;
-        document.removeEventListener("keydown", blockGameStart, true);
-        document.removeEventListener("touchstart", blockGameStart, true);
       } catch (error) {
         console.error("Error saving data: ", error);
         // Handle errors here, maybe show a message to the user
