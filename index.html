@@ -1,77 +1,72 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>|pacman|</title>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
 
-  <body>
-    <div id="shim">shim for font face</div>
-    <h1>PACMAN-DOODLE</h1>
-    <div id="pacman"></div>
+<head>
+  <title>Maintenance - Moota.co</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-    <div id="user-modal" class="modal">
-      <div class="modal-content">
+<body>
+  <div id="shim">shim for font face</div>
+  <h1>PACMAN-DOODLE</h1>
+
+  <!-- Audio Controls -->
+  <div id="audio-controls">
+    <button id="audio-toggle" class="audio-btn">
+      <span id="audio-icon">🔊</span>
+      <span id="audio-text">Mute</span>
+    </button>
+  </div>
+
+  <div id="pacman"></div>
+
+  <div id="user-modal" class="modal">
+    <div class="modal-content">
+      <center>
+        <h2>LOGIN</h2>
+      </center>
+
+      <form id="user-form" autocomplete="off">
+        <label>
+          <span class="input-icon">
+            <!-- User SVG icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 4-7 8-7s8 3 8 7"/>
+            </svg>
+          </span>
+          <input type="text" id="user-name" name="name" required placeholder="User Name" />
+          <span class="error-message" id="name-error"></span>
+        </label>
+        <label>
+          <span class="input-icon">
+            <!-- Email SVG icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <polyline points="3 7 12 13 21 7"/>
+            </svg>
+          </span>
+          <input type="email" id="user-email" name="email" required placeholder="Email" />
+          <span class="error-message" id="email-error"></span>
+        </label>
         <center>
-        <h2>LOGIN HERE</h2>
-        </center>
-        <form id="user-form" autocomplete="off">
-          <label>
-            <span class="input-icon">
-              <!-- User SVG icon -->
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
-            </span>
-            <input
-              type="text"
-              id="user-name"
-              name="name"
-              required
-              placeholder="User Name"
-            />
-            <span class="error-message" id="name-error"></span>
-          </label>
-          <label>
-            <span class="input-icon">
-              <!-- Email SVG icon -->
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
-            </span>
-            <input
-              type="email"
-              id="user-email"
-              name="email"
-              required
-              placeholder="Email"
-            />
-            <span class="error-message" id="email-error"></span>
-          </label>
-          <center>
           <button type="submit" id="play-btn">Play</button>
-          </center>
-        </form>
-      </div>
+        </center>
+
+      </form>
     </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
-    <!-- Firebase SDKs -->
-    <script
-      src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"
-      type="module"
-    ></script>
-    <script
-      src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"
-      type="module"
-    ></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js" type="module"></script>
 
-    <script src="script.js" type="module"></script>
-  </body>
+  <script src="script.js" type="module"></script>
+</body>
+
 </html>
