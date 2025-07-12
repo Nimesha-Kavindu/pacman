@@ -744,7 +744,7 @@ Pacman.User = function (game, map) {
       return;
     }
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00ffff";
     ctx.beginPath();
     ctx.moveTo(
       (position.x / 10) * size + half,
@@ -767,7 +767,7 @@ Pacman.User = function (game, map) {
     var s = map.blockSize,
       angle = calcAngle(direction, position);
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00ffff";
 
     ctx.beginPath();
 
@@ -845,7 +845,7 @@ Pacman.Map = function (size) {
   function drawWall(ctx) {
     var i, j, p, line;
 
-    ctx.strokeStyle = "#0000FF";
+    ctx.strokeStyle = "#00d4ff";
     ctx.lineWidth = 5;
     ctx.lineCap = "round";
 
@@ -1013,7 +1013,7 @@ var PACMAN = (function () {
   }
 
   function dialog(text) {
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00ffff";
     ctx.font = "18px Calibri";
 
     // Check if it's a mobile device
@@ -1108,10 +1108,10 @@ var PACMAN = (function () {
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, topLeft, map.width * map.blockSize, 30);
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00ffff";
 
     for (var i = 0, len = user.getLives(); i < len; i++) {
-      ctx.fillStyle = "#FFFF00";
+      ctx.fillStyle = "#00ffff";
       ctx.beginPath();
       ctx.moveTo(
         150 + 25 * i + map.blockSize / 2,
@@ -1129,7 +1129,7 @@ var PACMAN = (function () {
       ctx.fill();
     }
 
-    ctx.fillStyle = "#FFFF00";
+    ctx.fillStyle = "#00ffff";
     ctx.font = "14px Calibri";
     ctx.fillText("Score: " + user.theScore(), 30, textBase);
     ctx.fillText("Level: " + level, 260, textBase);
@@ -1354,6 +1354,42 @@ var PACMAN = (function () {
     document.addEventListener("touchstart", function () {
       if (state === WAITING && allowGameStart) {
         startNewGame();
+      }
+    });
+
+    // Mobile pause functionality
+    document.addEventListener("visibilitychange", function() {
+      if (document.hidden && state === PLAYING) {
+        stored = state;
+        setState(PAUSE);
+        map.draw(ctx);
+        dialog("Paused - Tap to resume");
+      }
+    });
+
+    // Pause on window blur (when switching apps/tabs)
+    window.addEventListener("blur", function() {
+      if (state === PLAYING) {
+        stored = state;
+        setState(PAUSE);
+        map.draw(ctx);
+        dialog("Paused - Tap to resume");
+      }
+    });
+
+    // Resume on window focus
+    window.addEventListener("focus", function() {
+      if (state === PAUSE && stored === PLAYING) {
+        setState(stored);
+        map.draw(ctx);
+      }
+    });
+
+    // Resume on touch when paused
+    document.addEventListener("touchstart", function() {
+      if (state === PAUSE && stored === PLAYING) {
+        setState(stored);
+        map.draw(ctx);
       }
     });
 

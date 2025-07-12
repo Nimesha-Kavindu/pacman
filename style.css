@@ -1,3 +1,10 @@
+:root {
+  --accent-primary: #00d4ff;
+  --accent-secondary: #56a380;
+  --accent-tertiary: #00ffff;
+  --accent-quaternary: #0080ff;
+}
+
 body {
   display: flex;
   flex-direction: column;
@@ -37,10 +44,41 @@ body {
 
 h1 {
   font-family: cursive;
+  font-family: "Orbitron", monospace;
   text-align: center;
   color: rgb(86, 163, 128);
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary) 0%,
+    var(--accent-tertiary) 25%,
+    var(--accent-secondary) 50%,
+    var(--accent-quaternary) 75%,
+    var(--accent-primary) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease-in-out infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 10px 0;
   font-size: 1.5em;
+  font-size: 1.8em;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.2));
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Mobile-specific styles */
