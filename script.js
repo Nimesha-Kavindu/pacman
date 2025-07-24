@@ -1737,8 +1737,12 @@ window.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("user-form");
   const nameInput = document.getElementById("user-name");
   const emailInput = document.getElementById("user-email");
+  const facultyInput = document.getElementById("faculty-name");
+  const phoneInput = document.getElementById("phone-number");
   const nameError = document.getElementById("name-error");
   const emailError = document.getElementById("email-error");
+  const facultyError = document.getElementById("faculty-error");
+  const phoneError = document.getElementById("phone-error");
 
   // Check for existing user ID in localStorage
   userId = localStorage.getItem("pacmanUserId");
@@ -1777,11 +1781,37 @@ window.addEventListener("DOMContentLoaded", function () {
       emailInput.classList.remove("error");
       emailError.textContent = "";
     }
+    
+    // Faculty validation
+    if (!facultyInput.value.trim()) {
+      facultyInput.classList.add("error");
+      facultyError.textContent = "Faculty name is required.";
+      valid = false;
+    } else {
+      facultyInput.classList.remove("error");
+      facultyError.textContent = "";
+    }
+    
+    // Phone validation
+    if (!phoneInput.value.trim()) {
+      phoneInput.classList.add("error");
+      phoneError.textContent = "Phone number is required.";
+      valid = false;
+    } else if (!/^\+?[\d\s\-\(\)]{10,}$/.test(phoneInput.value.trim())) {
+      phoneInput.classList.add("error");
+      phoneError.textContent = "Enter a valid phone number.";
+      valid = false;
+    } else {
+      phoneInput.classList.remove("error");
+      phoneError.textContent = "";
+    }
 
     if (valid) {
       try {
         const userEmail = emailInput.value.trim();
         const userName = nameInput.value.trim();
+        const facultyName = facultyInput.value.trim();
+        const phoneNumber = phoneInput.value.trim();
 
         // Check if user with this email already exists
         const usersRef = collection(db, "users");
@@ -1797,6 +1827,8 @@ window.addEventListener("DOMContentLoaded", function () {
           const docRef = await addDoc(collection(db, "users"), {
             name: userName,
             email: userEmail,
+            faculty: facultyName,
+            phone: phoneNumber,
             highScore: 0,
           });
           userId = docRef.id;
