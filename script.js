@@ -1194,8 +1194,9 @@ var PACMAN = (function () {
       if (whatsappModal) {
         whatsappModal.style.display = "flex";
       }
-    }, 2000); // Show after 2 seconds
+    }, 1000); // Show after 2 seconds
   }
+  
 
   function mainLoop() {
     var diff, i, len;
