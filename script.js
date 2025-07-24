@@ -1187,6 +1187,16 @@ var PACMAN = (function () {
     }
   }
 
+  function showWhatsappGroup(){
+    // Show WhatsApp popup after a delay
+    setTimeout(() => {
+      const whatsappModal = document.getElementById("whatsapp-modal");
+      if (whatsappModal) {
+        whatsappModal.style.display = "flex";
+      }
+    }, 2000); // Show after 2 seconds
+  }
+
   function mainLoop() {
     var diff, i, len;
 
@@ -1202,6 +1212,10 @@ var PACMAN = (function () {
       stateChanged = false;
       map.draw(ctx);
       dialog("Press ENTER to start a New game");
+      // Only show WhatsApp popup if user has played before (has userId in localStorage)
+      if (localStorage.getItem("pacmanUserId")) {
+        showWhatsappGroup()
+      }
     } else if (state === EATEN_PAUSE && tick - timerStart > Pacman.FPS / 3) {
       map.draw(ctx);
       setState(PLAYING);
@@ -1848,6 +1862,22 @@ window.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+// WhatsApp popup close function
+window.closeWhatsappPopup = function() {
+  const whatsappModal = document.getElementById("whatsapp-modal");
+  if (whatsappModal) {
+    whatsappModal.style.display = "none";
+  }
+}
+
+// WhatsApp join group function
+window.joinWhatsappGroup = function() {
+  // Open WhatsApp group link in new tab
+  window.open("https://chat.whatsapp.com/your-group-link", "_blank");
+  // Hide the popup after clicking join
+  closeWhatsappPopup();
+}
 
 // Helper function to update high score
 async function updateHighScore(score) {
