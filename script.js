@@ -1880,7 +1880,7 @@ window.closeWhatsappPopup = function() {
 // WhatsApp join group function
 window.joinWhatsappGroup = function() {
   // Open WhatsApp group link in new tab
-  window.open("https://chat.whatsapp.com/your-group-link", "_blank");
+  window.open("https://chat.whatsapp.com/H8JwWzMlgsB8Ew0zpnN6Kf", "_blank");
   // Hide the popup after clicking join
   closeWhatsappPopup();
 }
