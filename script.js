@@ -7,6 +7,8 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  limit,
+  orderBy,
   query,
   updateDoc,
   where,
@@ -1748,6 +1750,9 @@ window.addEventListener("DOMContentLoaded", function () {
   // Initialize audio system
   AudioSystem.init();
   
+  // Fetch and display high score on page load
+  fetchAndDisplayHighScore();
+  
   const modal = document.getElementById("user-modal");
   const form = document.getElementById("user-form");
   const nameInput = document.getElementById("user-name");
@@ -1880,6 +1885,37 @@ window.joinWhatsappGroup = function() {
   closeWhatsappPopup();
 }
 
+// Function to fetch and display highest score
+async function fetchAndDisplayHighScore() {
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, orderBy("highScore", "desc"), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const topUser = querySnapshot.docs[0].data();
+      const highScoreValue = document.getElementById("high-score-value");
+      
+      if (highScoreValue) {
+        highScoreValue.textContent = topUser.highScore.toLocaleString();
+      }
+    } else {
+      const highScoreValue = document.getElementById("high-score-value");
+      
+      if (highScoreValue) {
+        highScoreValue.textContent = "0";
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching high score:", error);
+    const highScoreValue = document.getElementById("high-score-value");
+    
+    if (highScoreValue) {
+      highScoreValue.textContent = "--";
+    }
+  }
+}
+
 // Helper function to update high score
 async function updateHighScore(score) {
   if (!userId) return; // No user ID found
@@ -1893,7 +1929,8 @@ async function updateHighScore(score) {
         await updateDoc(userRef, {
           highScore: score,
         });
-        // High score updated successfully
+        // Refresh high score display after updating
+        fetchAndDisplayHighScore();
       }
     }
   } catch (error) {

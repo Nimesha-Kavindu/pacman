@@ -166,6 +166,41 @@ h1 {
   text-transform: uppercase;
 }
 
+/* High Score Display */
+.high-score {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.05) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 15px;
+  padding: 15px 20px;
+  margin: 10px auto 20px;
+  max-width: 300px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(255, 215, 0, 0.1),
+    inset 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+.high-score-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #FFD700;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.high-score-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0;
+  font-family: "Orbitron", monospace;
+}
+
 @keyframes gradientShift {
   0% {
     background-position: 0% 50%;
@@ -219,6 +254,16 @@ h1 {
     width: 95%;
     max-width: 350px;
     margin: 0 auto;
+  }
+
+  .high-score {
+    margin: 5px auto 15px;
+    padding: 10px 15px;
+    max-width: 280px;
+  }
+
+  .high-score-value {
+    font-size: 1.5rem;
   }
 }
 
