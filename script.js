@@ -1771,6 +1771,8 @@ window.addEventListener("DOMContentLoaded", function () {
     // User has played before, hide modal and allow game to start
     modal.style.display = "none";
     allowGameStart = true;
+    // Update high score display for returning player
+    fetchAndDisplayHighScore();
   } else {
     // First-time player, show the modal
     modal.style.display = "flex";
@@ -1859,6 +1861,9 @@ window.addEventListener("DOMContentLoaded", function () {
         modal.style.display = "none";
         allowGameStart = true;
         
+        // Update high score display for current player
+        fetchAndDisplayHighScore();
+        
         // Play game start sound
         AudioSystem.play('vcs90');
       } catch (error) {
@@ -1885,23 +1890,30 @@ window.joinWhatsappGroup = function() {
   closeWhatsappPopup();
 }
 
-// Function to fetch and display highest score
+// Function to fetch and display current player's highest score
 async function fetchAndDisplayHighScore() {
   try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, orderBy("highScore", "desc"), limit(1));
-    const querySnapshot = await getDocs(q);
+    const highScoreValue = document.getElementById("high-score-value");
+    
+    if (!userId) {
+      // If no user ID yet, show placeholder
+      if (highScoreValue) {
+        highScoreValue.textContent = "--";
+      }
+      return;
+    }
 
-    if (!querySnapshot.empty) {
-      const topUser = querySnapshot.docs[0].data();
-      const highScoreValue = document.getElementById("high-score-value");
+    const userRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const playerHighScore = userData.highScore || 0;
       
       if (highScoreValue) {
-        highScoreValue.textContent = topUser.highScore.toLocaleString();
+        highScoreValue.textContent = playerHighScore.toLocaleString();
       }
     } else {
-      const highScoreValue = document.getElementById("high-score-value");
-      
       if (highScoreValue) {
         highScoreValue.textContent = "0";
       }
